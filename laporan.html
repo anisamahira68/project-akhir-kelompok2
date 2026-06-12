@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Buat Laporan - CampusFind</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.7.0/dist/tabler-icons.min.css" />
+  <link rel="stylesheet" href="style.css" />
+  <style>
+    .form-page { max-width: 600px; margin: 2rem auto; padding: 0 1rem 3rem; }
+    .page-header { margin-bottom: 1.5rem; }
+    .page-header h1 { font-size: 22px; font-weight: 700; color: var(--primary); margin-bottom: 4px; }
+    .page-header p { font-size: 13px; color: var(--text-muted); }
+
+    .tipe-tabs { display: flex; border: 1px solid var(--border); border-radius: var(--rad-sm); overflow: hidden; margin-bottom: 1.5rem; }
+    .tipe-tab { flex: 1; padding: 11px; font-family: 'Plus Jakarta Sans', sans-serif; font-size: 13px; font-weight: 600; border: none; cursor: pointer; background: var(--bg); color: var(--text-muted); transition: all 0.15s; display: flex; align-items: center; justify-content: center; gap: 6px; }
+    .tipe-tab.tab-hilang.active { background: var(--accent-light); color: var(--accent); }
+    .tipe-tab.tab-ditemukan.active { background: var(--primary-light); color: var(--primary); }
+
+    .upload-zone { border: 2px dashed var(--border); border-radius: var(--rad-sm); padding: 28px; text-align: center; cursor: pointer; transition: all 0.15s; position: relative; }
+    .upload-zone:hover { border-color: var(--primary-mid); background: var(--primary-light); }
+    .upload-zone i { font-size: 32px; color: var(--text-muted); display: block; margin-bottom: 8px; }
+    .upload-zone span { font-size: 12px; color: var(--text-muted); }
+    .upload-zone input[type="file"] { display: none; }
+    .preview-img { width: 100%; height: 180px; object-fit: cover; border-radius: var(--rad-sm); display: none; margin-top: 10px; }
+
+    .form-card { background: white; border: 1px solid var(--border); border-radius: var(--rad); padding: 2rem; box-shadow: var(--shadow); }
+    .section-divider { font-size: 11px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; margin: 1.25rem 0 1rem; padding-bottom: 6px; border-bottom: 1px solid var(--border); }
+
+    .login-required { background: var(--accent-light); border: 1px solid #F09977; border-radius: var(--rad-sm); padding: 1.25rem; text-align: center; margin-bottom: 1.5rem; }
+    .login-required p { font-size: 13px; color: #993C1D; margin-bottom: 0.75rem; }
+  </style>
+</head>
+<body>
+
+<!-- NAVBAR -->
+<nav class="navbar">
+  <a href="index.html" class="logo">
+    <i class="ti ti-map-search"></i> CampusFind
+  </a>
+  <div class="nav-links">
+    <a href="index.html">Beranda</a>
+    <a href="laporan.html" class="active">Buat Laporan</a>
+    <a href="riwayat.html">Riwayat</a>
+  </div>
+  <div class="nav-actions" id="nav-actions"></div>
+</nav>
+
+<div class="form-page">
+  <div class="page-header">
+    <h1>Buat Laporan</h1>
+    <p>Laporkan barang hilang atau barang yang kamu temukan di lingkungan kampus.</p>
+  </div>
+
+  <!-- Pesan jika belum login -->
+  <div class="login-required" id="login-required" style="display:none;">
+    <p><i class="ti ti-lock"></i> Kamu harus masuk terlebih dahulu untuk membuat laporan.</p>
+    <a href="login.html" class="btn btn-primary"><i class="ti ti-login"></i> Masuk Sekarang</a>
+  </div>
+
+  <div id="form-wrapper">
+    <div class="form-card">
+      <!-- TIPE TABS -->
+      <div class="tipe-tabs">
+        <button class="tipe-tab tab-hilang active" id="tab-hilang" onclick="setTipe('hilang')">
+          <i class="ti ti-alert-circle"></i> Barang Hilang
+        </button>
+        <button class="tipe-tab tab-ditemukan" id="tab-ditemukan" onclick="setTipe('ditemukan')">
+          <i class="ti ti-circle-check"></i> Barang Ditemukan
+        </button>
+      </div>
+
+      <div id="alert-laporan" class="alert" style="display:none; margin-bottom:1rem;"></div>
+
+      <!-- INFO BARANG -->
+      <div class="section-divider">Informasi Barang</div>
+
+      <div class="form-group">
+        <label>Nama Barang *</label>
+        <input type="text" id="input-nama" placeholder="Contoh: Dompet kulit hitam, Charger laptop..." />
+      </div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label>Kategori *</label>
+          <select id="input-kategori">
+            <option value="">Pilih kategori...</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Tanggal *</label>
+          <input type="date" id="input-tanggal" />
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label>Lokasi *</label>
+        <input type="text" id="input-lokasi" placeholder="Contoh: Kantin Pusat, Lab Komputer Gedung B..." />
+      </div>
+
+      <div class="form-group">
+        <label>Deskripsi</label>
+        <textarea id="input-deskripsi" placeholder="Ciri-ciri khusus, warna, merek, isi, atau detail lainnya..."></textarea>
+      </div>
+
+      <!-- FOTO -->
+      <div class="section-divider">Foto Barang (Opsional)</div>
+
+      <div class="upload-zone" onclick="document.getElementById('input-foto').click()" id="upload-zone">
+        <i class="ti ti-photo-up" id="upload-icon"></i>
+        <span id="upload-text">Klik untuk unggah foto (JPG, PNG, WEBP · Maks. 5MB)</span>
+        <input type="file" id="input-foto" accept=".jpg,.jpeg,.png,.webp" onchange="previewFoto(event)" />
+        <img id="preview-img" class="preview-img" alt="Preview foto" />
+      </div>
+
+      <!-- KONTAK -->
+      <div class="section-divider">Informasi Kontak</div>
+
+      <div class="form-group">
+        <label>No. WhatsApp *</label>
+        <input type="text" id="input-kontak" placeholder="08xxxxxxxxxx (akan ditampilkan ke pengguna lain)" />
+      </div>
+
+      <button class="btn btn-primary" style="width:100%; justify-content:center; padding:12px; margin-top:0.5rem; font-size:14px;" onclick="kirimLaporan()" id="btn-kirim">
+        <i class="ti ti-send"></i> Kirim Laporan
+      </button>
+
+      <p style="font-size:12px; color:var(--text-muted); text-align:center; margin-top:10px;">
+        Laporan akan ditampilkan setelah diverifikasi oleh admin.
+      </p>
+    </div>
+  </div>
+</div>
+
+<script src="app.js"></script>
+<script>
+  let tipeAktif = 'hilang';
+
+  // Cek login
+  document.addEventListener('DOMContentLoaded', () => {
+    if (!isLogin()) {
+      document.getElementById('login-required').style.display = 'block';
+      document.getElementById('form-wrapper').style.display = 'none';
+    }
+
+    // Set tanggal default hari ini
+    document.getElementById('input-tanggal').value = new Date().toISOString().split('T')[0];
+
+    // Isi kontak dari data user jika ada
+    const user = getUser();
+    if (user && user.no_hp) {
+      document.getElementById('input-kontak').value = user.no_hp;
+    }
+
+    // Cek query param ?tipe=
+    const params = new URLSearchParams(window.location.search);
+    if (params.get('tipe') === 'ditemukan') setTipe('ditemukan');
+
+    loadKategori();
+  });
+
+  function setTipe(tipe) {
+    tipeAktif = tipe;
+    document.getElementById('tab-hilang').classList.toggle('active', tipe === 'hilang');
+    document.getElementById('tab-ditemukan').classList.toggle('active', tipe === 'ditemukan');
+  }
+
+  async function loadKategori() {
+    try {
+      const data = await apiFetch('/kategori');
+      const sel = document.getElementById('input-kategori');
+      data.forEach(k => {
+        sel.innerHTML += `<option value="${k.id}">${k.nama}</option>`;
+      });
+    } catch(e) {}
+  }
+
+  function previewFoto(e) {
+    const file = e.target.files[0];
+    if (!file) return;
+    const preview = document.getElementById('preview-img');
+    preview.src = URL.createObjectURL(file);
+    preview.style.display = 'block';
+    document.getElementById('upload-icon').style.display = 'none';
+    document.getElementById('upload-text').textContent = file.name;
+  }
+
+  async function kirimLaporan() {
+    const nama       = document.getElementById('input-nama').value.trim();
+    const kategori   = document.getElementById('input-kategori').value;
+    const tanggal    = document.getElementById('input-tanggal').value;
+    const lokasi     = document.getElementById('input-lokasi').value.trim();
+    const deskripsi  = document.getElementById('input-deskripsi').value.trim();
+    const kontak     = document.getElementById('input-kontak').value.trim();
+    const fotoFile   = document.getElementById('input-foto').files[0];
+
+    if (!nama || !kategori || !tanggal || !lokasi || !kontak) {
+      return tampilAlert('alert-laporan', 'Semua field bertanda * wajib diisi.', 'error');
+    }
+
+    const btn = document.getElementById('btn-kirim');
+    btn.disabled = true;
+    btn.innerHTML = '<i class="ti ti-loader ti-spin"></i> Mengirim...';
+
+    try {
+      const formData = new FormData();
+      formData.append('tipe', tipeAktif);
+      formData.append('nama_barang', nama);
+      formData.append('kategori_id', kategori);
+      formData.append('tanggal', tanggal);
+      formData.append('lokasi', lokasi);
+      formData.append('deskripsi', deskripsi);
+      formData.append('kontak', kontak);
+      if (fotoFile) formData.append('foto', fotoFile);
+
+      const token = getToken();
+      const res = await fetch(API_URL + '/laporan', {
+        method: 'POST',
+        headers: { 'Authorization': 'Bearer ' + token },
+        body: formData
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.message || 'Terjadi kesalahan.');
+
+      tampilAlert('alert-laporan', 'Laporan berhasil dikirim! Menunggu verifikasi admin.', 'success');
+
+      // Reset form
+      setTimeout(() => {
+        document.getElementById('input-nama').value = '';
+        document.getElementById('input-deskripsi').value = '';
+        document.getElementById('input-lokasi').value = '';
+        document.getElementById('input-foto').value = '';
+        document.getElementById('preview-img').style.display = 'none';
+        document.getElementById('upload-icon').style.display = 'block';
+        document.getElementById('upload-text').textContent = 'Klik untuk unggah foto (JPG, PNG, WEBP · Maks. 5MB)';
+      }, 500);
+
+    } catch(e) {
+      tampilAlert('alert-laporan', e.message, 'error');
+    } finally {
+      btn.disabled = false;
+      btn.innerHTML = '<i class="ti ti-send"></i> Kirim Laporan';
+    }
+  }
+</script>
+</body>
+</html>

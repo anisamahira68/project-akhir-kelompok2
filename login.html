@@ -1,0 +1,347 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Masuk - CampusFind</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.7.0/dist/tabler-icons.min.css" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <style>
+    /* ===== RESET & BASE ===== */
+    *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+    :root {
+      --primary:       #1D6B4E;
+      --primary-light: #E1F5EE;
+      --primary-mid:   #1D9E75;
+      --accent:        #D85A30;
+      --accent-light:  #FAECE7;
+      --white:         #ffffff;
+      --bg:            #F3F7F4;
+      --border:        #D8E4DC;
+      --text:          #1C1C1C;
+      --text-muted:    #6B7280;
+      --shadow-sm:     0 1px 4px rgba(0,0,0,0.07);
+      --shadow-card:   0 8px 40px rgba(29,107,78,0.13);
+      --rad:           14px;
+      --rad-sm:        8px;
+    }
+
+    body {
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      background-color: var(--bg);
+      color: var(--text);
+      font-size: 14px;
+      line-height: 1.6;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 1.5rem;
+      background-image:
+        radial-gradient(ellipse at 20% 50%, rgba(29,107,78,0.07) 0%, transparent 60%),
+        radial-gradient(ellipse at 80% 20%, rgba(29,158,117,0.06) 0%, transparent 50%);
+    }
+
+    a { text-decoration: none; color: inherit; }
+
+    /* ===== AUTH WRAPPER ===== */
+    .auth-wrapper {
+      width: 100%;
+      max-width: 420px;
+      animation: fadeUp 0.35s ease both;
+    }
+
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(18px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    /* ===== LOGO ===== */
+    .auth-logo {
+      display: flex;
+      align-items: center;
+      gap: 9px;
+      font-size: 18px;
+      font-weight: 700;
+      color: var(--primary);
+      margin-bottom: 1.75rem;
+      justify-content: center;
+    }
+
+    .auth-logo i {
+      font-size: 24px;
+      background: var(--primary);
+      color: white;
+      width: 38px;
+      height: 38px;
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    /* ===== CARD ===== */
+    .auth-card {
+      background: var(--white);
+      border: 1px solid var(--border);
+      border-radius: var(--rad);
+      padding: 2.25rem 2.5rem;
+      box-shadow: var(--shadow-card);
+    }
+
+    .auth-card-header {
+      margin-bottom: 1.75rem;
+    }
+
+    .auth-card-header h2 {
+      font-size: 22px;
+      font-weight: 700;
+      color: var(--text);
+      margin-bottom: 5px;
+    }
+
+    .auth-card-header p {
+      font-size: 13px;
+      color: var(--text-muted);
+    }
+
+    /* ===== FORM GROUP ===== */
+    .form-group {
+      margin-bottom: 1rem;
+    }
+
+    .form-group label {
+      display: block;
+      font-size: 12px;
+      font-weight: 700;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin-bottom: 7px;
+    }
+
+    .input-wrap {
+      position: relative;
+    }
+
+    .input-wrap i {
+      position: absolute;
+      left: 12px;
+      top: 50%;
+      transform: translateY(-50%);
+      font-size: 17px;
+      color: var(--text-muted);
+      pointer-events: none;
+      transition: color 0.15s;
+    }
+
+    .input-wrap input {
+      width: 100%;
+      padding: 10px 14px 10px 40px;
+      border: 1.5px solid var(--border);
+      border-radius: var(--rad-sm);
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      font-size: 13px;
+      color: var(--text);
+      background: white;
+      outline: none;
+      transition: border-color 0.15s, box-shadow 0.15s;
+    }
+
+    .input-wrap input:focus {
+      border-color: var(--primary-mid);
+      box-shadow: 0 0 0 3px rgba(29, 158, 117, 0.12);
+    }
+
+    .input-wrap input:focus + i,
+    .input-wrap:focus-within i {
+      color: var(--primary);
+    }
+
+    /* ===== DIVIDER ===== */
+    .form-divider {
+      height: 1px;
+      background: var(--border);
+      margin: 1.25rem 0;
+    }
+
+    /* ===== ALERT ===== */
+    .alert {
+      padding: 10px 14px;
+      border-radius: var(--rad-sm);
+      font-size: 13px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 1rem;
+    }
+
+    .alert-success {
+      background: var(--primary-light);
+      color: #085041;
+      border: 1px solid #5DCAA5;
+    }
+
+    .alert-error {
+      background: var(--accent-light);
+      color: #993C1D;
+      border: 1px solid #F09977;
+    }
+
+    /* ===== BUTTON ===== */
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 7px;
+      padding: 10px 20px;
+      border-radius: var(--rad-sm);
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      border: none;
+      transition: all 0.15s;
+      text-decoration: none;
+    }
+
+    .btn-primary {
+      background: var(--primary);
+      color: white;
+      width: 100%;
+      padding: 12px;
+      font-size: 14px;
+    }
+
+    .btn-primary:hover:not(:disabled) {
+      background: #155c41;
+      transform: translateY(-1px);
+      box-shadow: 0 4px 14px rgba(29,107,78,0.25);
+    }
+
+    .btn-primary:active:not(:disabled) {
+      transform: translateY(0);
+    }
+
+    .btn-primary:disabled {
+      opacity: 0.65;
+      cursor: not-allowed;
+    }
+
+    /* ===== FOOTER TEXT ===== */
+    .auth-footer {
+      text-align: center;
+      margin-top: 1.25rem;
+      font-size: 13px;
+      color: var(--text-muted);
+    }
+
+    .auth-footer a {
+      color: var(--primary);
+      font-weight: 600;
+    }
+
+    .auth-footer a:hover {
+      text-decoration: underline;
+    }
+
+    /* ===== RESPONSIVE ===== */
+    @media (max-width: 480px) {
+      .auth-card { padding: 1.75rem 1.5rem; }
+    }
+  </style>
+</head>
+<body>
+
+<div class="auth-wrapper">
+
+  <!-- Logo -->
+  <div class="auth-logo">
+    <i class="ti ti-map-search"></i>
+    CampusFind
+  </div>
+
+  <!-- Card -->
+  <div class="auth-card">
+    <div class="auth-card-header">
+      <h2>Selamat Datang 👋</h2>
+      <p>Masuk untuk membuat atau mengelola laporan barangmu.</p>
+    </div>
+
+    <!-- Alert -->
+    <div id="alert-login" class="alert" style="display:none;"></div>
+
+    <!-- Email -->
+    <div class="form-group">
+      <label>Email</label>
+      <div class="input-wrap">
+        <i class="ti ti-mail"></i>
+        <input type="email" id="input-email" placeholder="email@kampus.id" autocomplete="email" />
+      </div>
+    </div>
+
+    <!-- Password -->
+    <div class="form-group">
+      <label>Password</label>
+      <div class="input-wrap">
+        <i class="ti ti-lock"></i>
+        <input type="password" id="input-password" placeholder="Password kamu" autocomplete="current-password" />
+      </div>
+    </div>
+
+    <div class="form-divider"></div>
+
+    <!-- Tombol Masuk -->
+    <button class="btn btn-primary" onclick="doLogin()" id="btn-login">
+      <i class="ti ti-login"></i> Masuk
+    </button>
+
+    <!-- Link daftar -->
+    <p class="auth-footer">
+      Belum punya akun? <a href="register.html">Daftar sekarang</a>
+    </p>
+  </div>
+
+</div>
+
+<script src="app.js"></script>
+<script>
+  // Redirect jika sudah login
+  if (isLogin()) window.location.href = 'index.html';
+
+  async function doLogin() {
+    const email    = document.getElementById('input-email').value.trim();
+    const password = document.getElementById('input-password').value;
+
+    if (!email || !password) {
+      return tampilAlert('alert-login', 'Email dan password wajib diisi.', 'error');
+    }
+
+    const btn = document.getElementById('btn-login');
+    btn.disabled = true;
+    btn.innerHTML = '<i class="ti ti-loader ti-spin"></i> Memproses...';
+
+    try {
+      const data = await apiFetch('/auth/login', {
+        method: 'POST',
+        body: JSON.stringify({ email, password })
+      });
+      simpanLogin(data.token, data.user);
+      window.location.href = data.user.role === 'admin' ? 'admin.html' : 'index.html';
+    } catch(e) {
+      tampilAlert('alert-login', e.message, 'error');
+      btn.disabled = false;
+      btn.innerHTML = '<i class="ti ti-login"></i> Masuk';
+    }
+  }
+
+  // Enter untuk login
+  document.getElementById('input-password').addEventListener('keydown', e => {
+    if (e.key === 'Enter') doLogin();
+  });
+</script>
+</body>
+</html>

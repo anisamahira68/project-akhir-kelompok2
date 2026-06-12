@@ -1,0 +1,324 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Riwayat Laporan - CampusFind</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.7.0/dist/tabler-icons.min.css" />
+  <link rel="stylesheet" href="style.css" />
+  <style>
+    .riwayat-page { max-width: 720px; margin: 2rem auto; padding: 0 1rem 3rem; }
+    .page-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 1.5rem; flex-wrap: wrap; gap: 12px; }
+    .page-header h1 { font-size: 22px; font-weight: 700; color: var(--primary); margin-bottom: 2px; }
+    .page-header p { font-size: 13px; color: var(--text-muted); }
+
+    .filter-bar { display: flex; gap: 8px; margin-bottom: 1.25rem; flex-wrap: wrap; }
+    .filter-bar .filter-select { font-size: 12px; padding: 7px 10px; }
+
+    .riwayat-list { display: flex; flex-direction: column; gap: 10px; }
+
+    .riwayat-item { background: white; border: 1px solid var(--border); border-radius: var(--rad-sm); padding: 14px 16px; display: flex; align-items: center; gap: 14px; transition: border-color 0.15s, box-shadow 0.15s; }
+    .riwayat-item:hover { border-color: var(--primary-mid); box-shadow: 0 2px 8px rgba(0,0,0,0.07); }
+
+    .riwayat-ikon { width: 46px; height: 46px; border-radius: var(--rad-sm); display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+    .riwayat-ikon.hilang { background: var(--accent-light); color: var(--accent); }
+    .riwayat-ikon.ditemukan { background: var(--primary-light); color: var(--primary); }
+    .riwayat-ikon i { font-size: 22px; }
+
+    .riwayat-body { flex: 1; min-width: 0; }
+    .riwayat-body .nama { font-size: 14px; font-weight: 600; margin-bottom: 3px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .riwayat-body .sub { font-size: 12px; color: var(--text-muted); display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+    .riwayat-body .sub i { font-size: 13px; }
+
+    .riwayat-meta { text-align: right; flex-shrink: 0; display: flex; flex-direction: column; align-items: flex-end; gap: 6px; }
+    .riwayat-meta .tanggal { font-size: 11px; color: var(--text-muted); }
+
+    .riwayat-actions { display: flex; gap: 6px; margin-top: 6px; }
+
+    .verified-badge { display: inline-flex; align-items: center; gap: 4px; font-size: 11px; font-weight: 600; padding: 3px 8px; border-radius: 20px; }
+    .verified-badge.ok { background: var(--primary-light); color: #085041; }
+    .verified-badge.pending { background: #FAEEDA; color: #633806; }
+
+    /* Modal ubah status */
+    .modal-status .modal-box { max-width: 360px; }
+    .status-options { display: flex; flex-direction: column; gap: 8px; margin: 1rem 0; }
+    .status-option { display: flex; align-items: center; gap: 10px; padding: 10px 14px; border: 1px solid var(--border); border-radius: var(--rad-sm); cursor: pointer; transition: all 0.15s; font-size: 13px; font-weight: 500; }
+    .status-option:hover { border-color: var(--primary-mid); background: var(--primary-light); }
+    .status-option.selected { border-color: var(--primary); background: var(--primary-light); color: var(--primary); }
+    .status-option i { font-size: 18px; }
+
+    .empty-state { text-align: center; padding: 3rem 1rem; color: var(--text-muted); }
+    .empty-state i { font-size: 48px; margin-bottom: 12px; display: block; color: #C8CCC6; }
+    .empty-state p { font-size: 14px; margin-bottom: 1rem; }
+
+    .loading-state { text-align: center; padding: 2.5rem; color: var(--text-muted); font-size: 13px; }
+
+    /* Modal konfirmasi hapus */
+    .modal-hapus .modal-box { max-width: 360px; }
+    .modal-hapus .modal-body { font-size: 13px; color: var(--text-muted); margin: 0.75rem 0 1.25rem; }
+    .modal-hapus .modal-footer { display: flex; gap: 8px; justify-content: flex-end; }
+  </style>
+</head>
+<body>
+
+<!-- NAVBAR -->
+<nav class="navbar">
+  <a href="index.html" class="logo">
+    <i class="ti ti-map-search"></i> CampusFind
+  </a>
+  <div class="nav-links">
+    <a href="index.html">Beranda</a>
+    <a href="laporan.html">Buat Laporan</a>
+    <a href="riwayat.html" class="active">Riwayat</a>
+  </div>
+  <div class="nav-actions" id="nav-actions"></div>
+</nav>
+
+<div class="riwayat-page">
+  <div class="page-header">
+    <div>
+      <h1>Riwayat Laporan</h1>
+      <p>Semua laporan yang pernah kamu buat.</p>
+    </div>
+    <a href="laporan.html" class="btn btn-primary">
+      <i class="ti ti-plus"></i> Buat Laporan
+    </a>
+  </div>
+
+  <!-- Filter -->
+  <div class="filter-bar">
+    <select class="filter-select" id="filter-tipe" onchange="renderRiwayat()">
+      <option value="">Semua Tipe</option>
+      <option value="hilang">Hilang</option>
+      <option value="ditemukan">Ditemukan</option>
+    </select>
+    <select class="filter-select" id="filter-status" onchange="renderRiwayat()">
+      <option value="">Semua Status</option>
+      <option value="belum_ditemukan">Belum Ditemukan</option>
+      <option value="sedang_diproses">Sedang Diproses</option>
+      <option value="sudah_kembali">Sudah Kembali</option>
+    </select>
+  </div>
+
+  <div id="riwayat-container">
+    <div class="loading-state"><i class="ti ti-loader ti-spin" style="font-size:22px;"></i><br/>Memuat riwayat...</div>
+  </div>
+</div>
+
+<!-- MODAL UBAH STATUS -->
+<div class="modal-overlay modal-status" id="modal-status" onclick="if(event.target===this)tutupModalStatus()">
+  <div class="modal-box">
+    <div class="modal-header">
+      <h3>Ubah Status Laporan</h3>
+      <button class="modal-close" onclick="tutupModalStatus()"><i class="ti ti-x"></i></button>
+    </div>
+    <p style="font-size:13px; color:var(--text-muted);">Pilih status terbaru untuk laporan ini.</p>
+    <div class="status-options">
+      <div class="status-option" onclick="pilihStatus('belum_ditemukan')" id="opt-belum_ditemukan">
+        <i class="ti ti-circle-x" style="color:var(--accent);"></i> Belum Ditemukan
+      </div>
+      <div class="status-option" onclick="pilihStatus('sedang_diproses')" id="opt-sedang_diproses">
+        <i class="ti ti-loader" style="color:#BA7517;"></i> Sedang Diproses
+      </div>
+      <div class="status-option" onclick="pilihStatus('sudah_kembali')" id="opt-sudah_kembali">
+        <i class="ti ti-circle-check" style="color:var(--primary);"></i> Sudah Kembali
+      </div>
+    </div>
+    <div id="alert-status" class="alert" style="display:none; margin-bottom:10px;"></div>
+    <button class="btn btn-primary" style="width:100%; justify-content:center;" onclick="simpanStatus()" id="btn-simpan-status">
+      <i class="ti ti-check"></i> Simpan Status
+    </button>
+  </div>
+</div>
+
+<!-- MODAL HAPUS -->
+<div class="modal-overlay modal-hapus" id="modal-hapus" onclick="if(event.target===this)tutupModalHapus()">
+  <div class="modal-box">
+    <div class="modal-header">
+      <h3>Hapus Laporan</h3>
+      <button class="modal-close" onclick="tutupModalHapus()"><i class="ti ti-x"></i></button>
+    </div>
+    <p class="modal-body" id="modal-hapus-teks">Yakin ingin menghapus laporan ini? Tindakan ini tidak bisa dibatalkan.</p>
+    <div id="alert-hapus" class="alert" style="display:none; margin-bottom:10px;"></div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="tutupModalHapus()">Batal</button>
+      <button class="btn btn-danger" onclick="konfirmasiHapus()" id="btn-hapus-ok">
+        <i class="ti ti-trash"></i> Hapus
+      </button>
+    </div>
+  </div>
+</div>
+
+<script src="app.js"></script>
+<script>
+  let allRiwayat = [];
+  let idAktif    = null;
+  let statusDipilih = null;
+
+  // Redirect jika belum login
+  document.addEventListener('DOMContentLoaded', () => {
+    if (!isLogin()) {
+      window.location.href = 'login.html';
+      return;
+    }
+    loadRiwayat();
+  });
+
+  async function loadRiwayat() {
+    try {
+      allRiwayat = await apiFetch('/riwayat');
+      renderRiwayat();
+    } catch(e) {
+      document.getElementById('riwayat-container').innerHTML = `
+        <div class="empty-state">
+          <i class="ti ti-alert-circle"></i>
+          <p>${e.message}</p>
+        </div>`;
+    }
+  }
+
+  function renderRiwayat() {
+    const filterTipe   = document.getElementById('filter-tipe').value;
+    const filterStatus = document.getElementById('filter-status').value;
+
+    let data = allRiwayat;
+    if (filterTipe)   data = data.filter(l => l.tipe === filterTipe);
+    if (filterStatus) data = data.filter(l => l.status === filterStatus);
+
+    const container = document.getElementById('riwayat-container');
+
+    if (data.length === 0) {
+      container.innerHTML = `
+        <div class="empty-state">
+          <i class="ti ti-clipboard-off"></i>
+          <p>Belum ada laporan${filterTipe || filterStatus ? ' yang sesuai filter' : ''}.</p>
+          <a href="laporan.html" class="btn btn-primary"><i class="ti ti-plus"></i> Buat Laporan Pertama</a>
+        </div>`;
+      return;
+    }
+
+    container.innerHTML = `<div class="riwayat-list">${data.map(item => renderItem(item)).join('')}</div>`;
+  }
+
+  function renderItem(item) {
+    const verifiedBadge = item.verified
+      ? `<span class="verified-badge ok"><i class="ti ti-circle-check"></i> Terverifikasi</span>`
+      : `<span class="verified-badge pending"><i class="ti ti-clock"></i> Menunggu Verifikasi</span>`;
+
+    return `
+      <div class="riwayat-item">
+        <div class="riwayat-ikon ${item.tipe}">
+          <i class="ti ti-${item.tipe === 'hilang' ? 'alert-circle' : 'circle-check'}"></i>
+        </div>
+        <div class="riwayat-body">
+          <div class="nama">${item.nama_barang}</div>
+          <div class="sub">
+            <span><i class="ti ti-map-pin"></i>${item.lokasi}</span>
+            <span><i class="ti ti-tag"></i>${item.kategori}</span>
+          </div>
+          <div style="margin-top:6px; display:flex; gap:6px; flex-wrap:wrap; align-items:center;">
+            <span class="badge ${tipeBadgeClass[item.tipe]}">${tipeLabel[item.tipe]}</span>
+            <span class="badge ${statusBadgeClass[item.status]}">${statusLabel[item.status]}</span>
+            ${verifiedBadge}
+          </div>
+        </div>
+        <div class="riwayat-meta">
+          <div class="tanggal">${formatTanggal(item.tanggal)}</div>
+          <div class="riwayat-actions">
+            <button class="btn btn-outline" title="Ubah Status" onclick="bukaModalStatus(${item.id}, '${item.status}')" style="padding:6px 10px; font-size:12px;">
+              <i class="ti ti-edit"></i>
+            </button>
+            <button class="btn btn-danger" title="Hapus" onclick="bukaModalHapus(${item.id}, '${item.nama_barang}')" style="padding:6px 10px; font-size:12px;">
+              <i class="ti ti-trash"></i>
+            </button>
+          </div>
+        </div>
+      </div>`;
+  }
+
+  // ===== MODAL STATUS =====
+  function bukaModalStatus(id, statusSaat) {
+    idAktif = id;
+    statusDipilih = statusSaat;
+    // Reset semua
+    ['belum_ditemukan', 'sedang_diproses', 'sudah_kembali'].forEach(s => {
+      document.getElementById('opt-' + s).classList.toggle('selected', s === statusSaat);
+    });
+    document.getElementById('alert-status').style.display = 'none';
+    document.getElementById('modal-status').classList.add('open');
+  }
+
+  function tutupModalStatus() {
+    document.getElementById('modal-status').classList.remove('open');
+    idAktif = null;
+  }
+
+  function pilihStatus(status) {
+    statusDipilih = status;
+    ['belum_ditemukan', 'sedang_diproses', 'sudah_kembali'].forEach(s => {
+      document.getElementById('opt-' + s).classList.toggle('selected', s === status);
+    });
+  }
+
+  async function simpanStatus() {
+    if (!idAktif || !statusDipilih) return;
+    const btn = document.getElementById('btn-simpan-status');
+    btn.disabled = true;
+    btn.innerHTML = '<i class="ti ti-loader ti-spin"></i> Menyimpan...';
+    try {
+      await apiFetch(`/laporan/${idAktif}/status`, {
+        method: 'PUT',
+        body: JSON.stringify({ status: statusDipilih })
+      });
+      // Update data lokal
+      const idx = allRiwayat.findIndex(l => l.id === idAktif);
+      if (idx !== -1) allRiwayat[idx].status = statusDipilih;
+      tutupModalStatus();
+      renderRiwayat();
+    } catch(e) {
+      const el = document.getElementById('alert-status');
+      el.className = 'alert alert-error';
+      el.innerHTML = `<i class="ti ti-alert-circle"></i> ${e.message}`;
+      el.style.display = 'flex';
+    } finally {
+      btn.disabled = false;
+      btn.innerHTML = '<i class="ti ti-check"></i> Simpan Status';
+    }
+  }
+
+  // ===== MODAL HAPUS =====
+  function bukaModalHapus(id, nama) {
+    idAktif = id;
+    document.getElementById('modal-hapus-teks').textContent = `Yakin ingin menghapus laporan "${nama}"? Tindakan ini tidak bisa dibatalkan.`;
+    document.getElementById('alert-hapus').style.display = 'none';
+    document.getElementById('modal-hapus').classList.add('open');
+  }
+
+  function tutupModalHapus() {
+    document.getElementById('modal-hapus').classList.remove('open');
+    idAktif = null;
+  }
+
+  async function konfirmasiHapus() {
+    if (!idAktif) return;
+    const btn = document.getElementById('btn-hapus-ok');
+    btn.disabled = true;
+    btn.innerHTML = '<i class="ti ti-loader ti-spin"></i> Menghapus...';
+    try {
+      await apiFetch(`/laporan/${idAktif}`, { method: 'DELETE' });
+      allRiwayat = allRiwayat.filter(l => l.id !== idAktif);
+      tutupModalHapus();
+      renderRiwayat();
+    } catch(e) {
+      const el = document.getElementById('alert-hapus');
+      el.className = 'alert alert-error';
+      el.innerHTML = `<i class="ti ti-alert-circle"></i> ${e.message}`;
+      el.style.display = 'flex';
+    } finally {
+      btn.disabled = false;
+      btn.innerHTML = '<i class="ti ti-trash"></i> Hapus';
+    }
+  }
+</script>
+</body>
+</html>

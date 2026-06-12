@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>CampusFind - Lost & Found Kampus</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.7.0/dist/tabler-icons.min.css" />
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+
+<!-- NAVBAR -->
+<nav class="navbar">
+  <a href="index.html" class="logo">
+    <i class="ti ti-map-search"></i> CampusFind
+  </a>
+  <div class="nav-links">
+    <a href="index.html" class="active">Beranda</a>
+    <a href="laporan.html">Buat Laporan</a>
+    <a href="riwayat.html">Riwayat</a>
+  </div>
+  <div class="nav-actions" id="nav-actions"></div>
+</nav>
+
+<!-- HERO -->
+<section class="hero">
+  <div class="container">
+    <h1>Temukan barangmu, bantu sesama 🎓</h1>
+    <p>Platform digital lost & found kampus. Laporkan barang hilang atau temuan agar bisa kembali ke pemiliknya.</p>
+    <div class="hero-actions">
+      <a href="laporan.html?tipe=hilang" class="btn btn-hilang">
+        <i class="ti ti-alert-circle"></i> Laporkan Hilang
+      </a>
+      <a href="laporan.html?tipe=ditemukan" class="btn btn-ditemukan">
+        <i class="ti ti-circle-check"></i> Laporkan Ditemukan
+      </a>
+    </div>
+  </div>
+</section>
+
+<!-- STATISTIK -->
+<section class="stats-section">
+  <div class="container">
+    <div class="stats-grid" id="stats-grid">
+      <div class="stat-item"><div class="angka angka-hilang" id="stat-hilang">...</div><div class="label">Barang Hilang</div></div>
+      <div class="stat-item"><div class="angka angka-ditemukan" id="stat-ditemukan">...</div><div class="label">Barang Ditemukan</div></div>
+      <div class="stat-item"><div class="angka angka-proses" id="stat-proses">...</div><div class="label">Sedang Diproses</div></div>
+      <div class="stat-item"><div class="angka angka-kembali" id="stat-kembali">...</div><div class="label">Sudah Kembali</div></div>
+    </div>
+  </div>
+</section>
+
+<!-- FILTER & SEARCH -->
+<section class="filter-section">
+  <div class="container">
+    <div class="search-row">
+      <div class="search-input-wrap">
+        <i class="ti ti-search"></i>
+        <input type="text" id="input-search" placeholder="Cari nama barang, lokasi..." />
+      </div>
+      <select class="filter-select" id="filter-tipe">
+        <option value="">Semua Tipe</option>
+        <option value="hilang">Hilang</option>
+        <option value="ditemukan">Ditemukan</option>
+      </select>
+      <select class="filter-select" id="filter-kategori">
+        <option value="">Semua Kategori</option>
+      </select>
+      <select class="filter-select" id="filter-status">
+        <option value="">Semua Status</option>
+        <option value="belum_ditemukan">Belum Ditemukan</option>
+        <option value="sedang_diproses">Sedang Diproses</option>
+        <option value="sudah_kembali">Sudah Kembali</option>
+      </select>
+      <button class="btn btn-primary" onclick="loadLaporan()">
+        <i class="ti ti-search"></i> Cari
+      </button>
+    </div>
+  </div>
+</section>
+
+<!-- DAFTAR BARANG -->
+<section class="main-section">
+  <div class="container">
+    <div class="section-title" id="jumlah-hasil">Memuat data...</div>
+    <div class="cards-grid" id="cards-grid">
+      <!-- Cards diisi oleh JS -->
+    </div>
+  </div>
+</section>
+
+<!-- MODAL DETAIL -->
+<div class="modal-overlay" id="modal-detail" onclick="if(event.target===this)tutupModal()">
+  <div class="modal-box">
+    <div class="modal-header">
+      <h3 id="modal-nama">Detail Barang</h3>
+      <button class="modal-close" onclick="tutupModal()"><i class="ti ti-x"></i></button>
+    </div>
+    <div class="modal-img" id="modal-img">
+      <i class="ti ti-package" id="modal-icon"></i>
+    </div>
+    <div id="modal-isi"></div>
+    <button class="btn btn-primary" id="btn-kontak" style="width:100%; margin-top:1rem; justify-content:center;">
+      <i class="ti ti-brand-whatsapp"></i> Hubungi via WhatsApp
+    </button>
+  </div>
+</div>
+
+<script src="app.js"></script>
+<script>
+  // Muat kategori ke dropdown
+  async function loadKategori() {
+    try {
+      const data = await apiFetch('/kategori');
+      const sel = document.getElementById('filter-kategori');
+      data.forEach(k => {
+        sel.innerHTML += `<option value="${k.id}">${k.nama}</option>`;
+      });
+    } catch(e) {}
+  }
+
+  // Muat laporan
+  async function loadLaporan() {
+    const search    = document.getElementById('input-search').value;
+    const tipe      = document.getElementById('filter-tipe').value;
+    const kategori  = document.getElementById('filter-kategori').value;
+    const status    = document.getElementById('filter-status').value;
+
+    let query = '?';
+    if (search)   query += `search=${encodeURIComponent(search)}&`;
+    if (tipe)     query += `tipe=${tipe}&`;
+    if (kategori) query += `kategori_id=${kategori}&`;
+    if (status)   query += `status=${status}&`;
+
+    try {
+      const data = await apiFetch('/laporan' + query);
+      const grid = document.getElementById('cards-grid');
+      document.getElementById('jumlah-hasil').textContent = `${data.length} laporan ditemukan`;
+
+      if (data.length === 0) {
+        grid.innerHTML = `<p style="color:#6B7280; grid-column:1/-1; text-align:center; padding:2rem;">Tidak ada laporan yang cocok.</p>`;
+        return;
+      }
+
+      grid.innerHTML = data.map(item => {
+        const imgEl = item.foto
+          ? `<img src="${fotoUrl(item.foto)}" alt="${item.nama_barang}" />`
+          : `<i class="ti ti-package"></i>`;
+        return `
+          <div class="item-card" onclick="bukaModal(${item.id})">
+            <div class="card-img">${imgEl}</div>
+            <div class="card-body">
+              <div class="card-title">${item.nama_barang}</div>
+              <div class="card-meta"><i class="ti ti-map-pin"></i>${item.lokasi}</div>
+              <div class="card-meta"><i class="ti ti-calendar"></i>${formatTanggal(item.tanggal)}</div>
+              <div class="card-meta"><i class="ti ti-tag"></i>${item.kategori}</div>
+              <span class="badge ${tipeBadgeClass[item.tipe]}">${tipeLabel[item.tipe]}</span>
+              <span class="badge ${statusBadgeClass[item.status]}">${statusLabel[item.status]}</span>
+            </div>
+          </div>`;
+      }).join('');
+    } catch(e) {
+      document.getElementById('cards-grid').innerHTML = `<p style="color:red; grid-column:1/-1;">${e.message}</p>`;
+    }
+  }
+
+  // Buka modal detail
+  async function bukaModal(id) {
+    try {
+      const item = await apiFetch('/laporan/' + id);
+      document.getElementById('modal-nama').textContent = item.nama_barang;
+
+      const imgEl = document.getElementById('modal-img');
+      imgEl.innerHTML = item.foto
+        ? `<img src="${fotoUrl(item.foto)}" alt="${item.nama_barang}" />`
+        : `<i class="ti ti-package" style="font-size:52px;color:#C8CCC6;"></i>`;
+
+      document.getElementById('modal-isi').innerHTML = `
+        <div class="detail-row"><span class="lbl">Tipe</span><span class="badge ${tipeBadgeClass[item.tipe]}">${tipeLabel[item.tipe]}</span></div>
+        <div class="detail-row"><span class="lbl">Status</span><span class="badge ${statusBadgeClass[item.status]}">${statusLabel[item.status]}</span></div>
+        <div class="detail-row"><span class="lbl">Kategori</span><span>${item.kategori}</span></div>
+        <div class="detail-row"><span class="lbl">Lokasi</span><span>${item.lokasi}</span></div>
+        <div class="detail-row"><span class="lbl">Tanggal</span><span>${formatTanggal(item.tanggal)}</span></div>
+        <div class="detail-row"><span class="lbl">Deskripsi</span><span>${item.deskripsi || '-'}</span></div>
+        <div class="detail-row"><span class="lbl">Pelapor</span><span>${item.pelapor}</span></div>
+      `;
+
+      document.getElementById('btn-kontak').onclick = () => {
+        const no = item.no_hp.replace(/^0/, '62');
+        window.open(`https://wa.me/${no}?text=Halo, saya melihat laporan barang ${item.nama_barang} di CampusFind.`, '_blank');
+      };
+
+      document.getElementById('modal-detail').classList.add('open');
+    } catch(e) { alert(e.message); }
+  }
+
+  function tutupModal() {
+    document.getElementById('modal-detail').classList.remove('open');
+  }
+
+  // Statistik sederhana dari data laporan
+  async function loadStatistik() {
+    try {
+      const semua = await apiFetch('/laporan?');
+      const hilang    = semua.filter(l => l.tipe === 'hilang').length;
+      const ditemukan = semua.filter(l => l.tipe === 'ditemukan').length;
+      const proses    = semua.filter(l => l.status === 'sedang_diproses').length;
+      const kembali   = semua.filter(l => l.status === 'sudah_kembali').length;
+      document.getElementById('stat-hilang').textContent    = hilang;
+      document.getElementById('stat-ditemukan').textContent = ditemukan;
+      document.getElementById('stat-proses').textContent    = proses;
+      document.getElementById('stat-kembali').textContent   = kembali;
+    } catch(e) {}
+  }
+
+  // Inisialisasi
+  loadKategori();
+  loadLaporan();
+  loadStatistik();
+
+  // Enter untuk search
+  document.getElementById('input-search').addEventListener('keydown', e => {
+    if (e.key === 'Enter') loadLaporan();
+  });
+</script>
+</body>
+</html>

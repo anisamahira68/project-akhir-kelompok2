@@ -1,0 +1,323 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Dashboard Admin - CampusFind</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.7.0/dist/tabler-icons.min.css" />
+  <link rel="stylesheet" href="style.css" />
+  <style>
+    .tab-bar { display:flex; gap:4px; margin-bottom:1.5rem; background:white; border:1px solid var(--border); border-radius:var(--rad-sm); padding:5px; width:fit-content; }
+    .tab-btn { padding:8px 18px; border-radius:6px; border:none; font-family:'Plus Jakarta Sans',sans-serif; font-size:13px; font-weight:600; cursor:pointer; background:transparent; color:var(--text-muted); transition:all 0.15s; display:flex; align-items:center; gap:6px; }
+    .tab-btn.active { background:var(--primary-light); color:var(--primary); }
+    .tab-content { display:none; }
+    .tab-content.active { display:block; }
+    .page-title { font-size:20px; font-weight:700; color:var(--primary); margin-bottom:4px; }
+    .page-sub { font-size:13px; color:var(--text-muted); margin-bottom:1.5rem; }
+    .action-wrap { display:flex; gap:6px; }
+    .search-bar { display:flex; gap:8px; margin-bottom:1rem; flex-wrap:wrap; }
+    .search-bar input, .search-bar select { padding:8px 12px; border:1px solid var(--border); border-radius:var(--rad-sm); font-family:'Plus Jakarta Sans',sans-serif; font-size:13px; outline:none; }
+    .search-bar input { flex:1; min-width:200px; }
+    td .nama-barang { font-weight:600; font-size:13px; }
+    td .sub-info { font-size:11px; color:var(--text-muted); margin-top:2px; }
+    .empty-table { text-align:center; padding:3rem; color:var(--text-muted); font-size:13px; }
+    .empty-table i { font-size:36px; display:block; margin-bottom:8px; color:#C8CCC6; }
+  </style>
+</head>
+<body>
+
+<!-- NAVBAR -->
+<nav class="navbar">
+  <a href="index.html" class="logo"><i class="ti ti-map-search"></i> CampusFind</a>
+  <div class="nav-links">
+    <a href="index.html">Beranda</a>
+    <a href="admin.html" class="active">Dashboard Admin</a>
+  </div>
+  <div class="nav-actions" id="nav-actions"></div>
+</nav>
+
+<div class="admin-layout">
+  <!-- SIDEBAR -->
+  <aside class="admin-sidebar">
+    <div class="sidebar-menu">
+      <a href="#" onclick="switchTab('statistik')" id="menu-statistik" class="active">
+        <i class="ti ti-chart-bar"></i> Statistik
+      </a>
+      <a href="#" onclick="switchTab('laporan')" id="menu-laporan">
+        <i class="ti ti-clipboard-list"></i> Kelola Laporan
+      </a>
+      <a href="#" onclick="switchTab('users')" id="menu-users">
+        <i class="ti ti-users"></i> Data Pengguna
+      </a>
+    </div>
+  </aside>
+
+  <!-- MAIN CONTENT -->
+  <main class="admin-content">
+
+    <!-- ===== TAB STATISTIK ===== -->
+    <div class="tab-content active" id="tab-statistik">
+      <div class="page-title">Dashboard</div>
+      <div class="page-sub">Ringkasan aktivitas CampusFind</div>
+
+      <div class="admin-stats-grid" id="stat-cards">
+        <div class="admin-stat-card"><div class="num" id="s-total" style="color:var(--text)">...</div><div class="lbl">Total Laporan</div></div>
+        <div class="admin-stat-card"><div class="num" id="s-hilang" style="color:var(--accent)">...</div><div class="lbl">Barang Hilang</div></div>
+        <div class="admin-stat-card"><div class="num" id="s-ditemukan" style="color:var(--primary)">...</div><div class="lbl">Barang Ditemukan</div></div>
+        <div class="admin-stat-card"><div class="num" id="s-kembali" style="color:#185FA5">...</div><div class="lbl">Sudah Kembali</div></div>
+        <div class="admin-stat-card"><div class="num" id="s-pending" style="color:#BA7517">...</div><div class="lbl">Menunggu Verifikasi</div></div>
+      </div>
+    </div>
+
+    <!-- ===== TAB LAPORAN ===== -->
+    <div class="tab-content" id="tab-laporan">
+      <div class="page-title">Kelola Laporan</div>
+      <div class="page-sub">Verifikasi dan kelola semua laporan masuk</div>
+
+      <div class="search-bar">
+        <input type="text" id="search-laporan" placeholder="Cari nama barang, pelapor..." oninput="filterLaporan()" />
+        <select id="filter-verified" onchange="filterLaporan()">
+          <option value="">Semua Status Verifikasi</option>
+          <option value="0">Belum Diverifikasi</option>
+          <option value="1">Sudah Diverifikasi</option>
+        </select>
+        <select id="filter-tipe-admin" onchange="filterLaporan()">
+          <option value="">Semua Tipe</option>
+          <option value="hilang">Hilang</option>
+          <option value="ditemukan">Ditemukan</option>
+        </select>
+      </div>
+
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>Barang</th>
+              <th>Pelapor</th>
+              <th>Lokasi</th>
+              <th>Tipe</th>
+              <th>Status</th>
+              <th>Verifikasi</th>
+              <th>Aksi</th>
+            </tr>
+          </thead>
+          <tbody id="tbody-laporan">
+            <tr><td colspan="8" class="empty-table"><i class="ti ti-loader ti-spin"></i>Memuat data...</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- ===== TAB USERS ===== -->
+    <div class="tab-content" id="tab-users">
+      <div class="page-title">Data Pengguna</div>
+      <div class="page-sub">Daftar semua akun terdaftar</div>
+
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>Nama</th>
+              <th>Email</th>
+              <th>NIM</th>
+              <th>No. HP</th>
+              <th>Role</th>
+              <th>Bergabung</th>
+            </tr>
+          </thead>
+          <tbody id="tbody-users">
+            <tr><td colspan="7" class="empty-table"><i class="ti ti-loader ti-spin"></i>Memuat data...</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+  </main>
+</div>
+
+<!-- MODAL UBAH STATUS ADMIN -->
+<div class="modal-overlay" id="modal-status-admin" onclick="if(event.target===this)tutupModalStatusAdmin()">
+  <div class="modal-box" style="max-width:340px;">
+    <div class="modal-header">
+      <h3>Ubah Status Laporan</h3>
+      <button class="modal-close" onclick="tutupModalStatusAdmin()"><i class="ti ti-x"></i></button>
+    </div>
+    <div style="display:flex; flex-direction:column; gap:8px; margin:1rem 0;">
+      <button class="btn btn-outline" style="justify-content:flex-start; gap:10px;" onclick="simpanStatusAdmin('belum_ditemukan')">
+        <i class="ti ti-circle-x" style="color:var(--accent); font-size:18px;"></i> Belum Ditemukan
+      </button>
+      <button class="btn btn-outline" style="justify-content:flex-start; gap:10px;" onclick="simpanStatusAdmin('sedang_diproses')">
+        <i class="ti ti-loader" style="color:#BA7517; font-size:18px;"></i> Sedang Diproses
+      </button>
+      <button class="btn btn-outline" style="justify-content:flex-start; gap:10px;" onclick="simpanStatusAdmin('sudah_kembali')">
+        <i class="ti ti-circle-check" style="color:var(--primary); font-size:18px;"></i> Sudah Kembali
+      </button>
+    </div>
+  </div>
+</div>
+
+<script src="app.js"></script>
+<script>
+  let allLaporan = [];
+  let idAktifAdmin = null;
+
+  document.addEventListener('DOMContentLoaded', () => {
+    if (!isLogin() || !isAdmin()) {
+      alert('Akses ditolak. Halaman ini hanya untuk admin.');
+      window.location.href = 'index.html';
+      return;
+    }
+    loadStatistik();
+    loadLaporanAdmin();
+    loadUsers();
+  });
+
+  // ===== TAB NAVIGATION =====
+  function switchTab(nama) {
+    ['statistik','laporan','users'].forEach(t => {
+      document.getElementById('tab-' + t).classList.toggle('active', t === nama);
+      document.getElementById('menu-' + t).classList.toggle('active', t === nama);
+    });
+  }
+
+  // ===== STATISTIK =====
+  async function loadStatistik() {
+    try {
+      const d = await apiFetch('/admin/statistik');
+      document.getElementById('s-total').textContent    = d.total    ?? 0;
+      document.getElementById('s-hilang').textContent   = d.hilang   ?? 0;
+      document.getElementById('s-ditemukan').textContent= d.ditemukan ?? 0;
+      document.getElementById('s-kembali').textContent  = d.kembali  ?? 0;
+      document.getElementById('s-pending').textContent  = d.pending  ?? 0;
+    } catch(e) {}
+  }
+
+  // ===== LAPORAN ADMIN =====
+  async function loadLaporanAdmin() {
+    try {
+      allLaporan = await apiFetch('/admin/laporan');
+      filterLaporan();
+    } catch(e) {
+      document.getElementById('tbody-laporan').innerHTML =
+        `<tr><td colspan="8" class="empty-table"><i class="ti ti-alert-circle"></i>${e.message}</td></tr>`;
+    }
+  }
+
+  function filterLaporan() {
+    const search   = document.getElementById('search-laporan').value.toLowerCase();
+    const verified = document.getElementById('filter-verified').value;
+    const tipe     = document.getElementById('filter-tipe-admin').value;
+
+    let data = allLaporan;
+    if (search)   data = data.filter(l => l.nama_barang.toLowerCase().includes(search) || l.pelapor.toLowerCase().includes(search));
+    if (verified !== '') data = data.filter(l => String(l.verified) === verified);
+    if (tipe)     data = data.filter(l => l.tipe === tipe);
+
+    const tbody = document.getElementById('tbody-laporan');
+    if (data.length === 0) {
+      tbody.innerHTML = `<tr><td colspan="8" class="empty-table"><i class="ti ti-clipboard-off"></i>Tidak ada laporan.</td></tr>`;
+      return;
+    }
+
+    tbody.innerHTML = data.map((l, i) => `
+      <tr>
+        <td style="color:var(--text-muted); font-size:12px;">${i+1}</td>
+        <td>
+          <div class="nama-barang">${l.nama_barang}</div>
+          <div class="sub-info"><i class="ti ti-tag" style="font-size:11px;"></i> ${l.kategori}</div>
+        </td>
+        <td>
+          <div style="font-size:13px;">${l.pelapor}</div>
+          <div class="sub-info">${l.email}</div>
+        </td>
+        <td style="font-size:12px; color:var(--text-muted);">${l.lokasi}</td>
+        <td><span class="badge ${tipeBadgeClass[l.tipe]}">${tipeLabel[l.tipe]}</span></td>
+        <td><span class="badge ${statusBadgeClass[l.status]}">${statusLabel[l.status]}</span></td>
+        <td>
+          ${l.verified
+            ? `<span class="badge badge-ditemukan"><i class="ti ti-circle-check"></i> Terverifikasi</span>`
+            : `<span class="badge badge-proses"><i class="ti ti-clock"></i> Pending</span>`}
+        </td>
+        <td>
+          <div class="action-wrap">
+            ${l.verified
+              ? `<button class="btn btn-danger" title="Tolak" onclick="verifikasiLaporan(${l.id}, 0)" style="padding:5px 9px; font-size:12px;"><i class="ti ti-x"></i></button>`
+              : `<button class="btn btn-success" title="Verifikasi" onclick="verifikasiLaporan(${l.id}, 1)" style="padding:5px 9px; font-size:12px;"><i class="ti ti-check"></i></button>`}
+            <button class="btn btn-outline" title="Ubah Status" onclick="bukaModalStatusAdmin(${l.id})" style="padding:5px 9px; font-size:12px;"><i class="ti ti-edit"></i></button>
+          </div>
+        </td>
+      </tr>
+    `).join('');
+  }
+
+  async function verifikasiLaporan(id, verified) {
+    try {
+      await apiFetch(`/admin/laporan/${id}/verifikasi`, {
+        method: 'PUT',
+        body: JSON.stringify({ verified })
+      });
+      const idx = allLaporan.findIndex(l => l.id === id);
+      if (idx !== -1) allLaporan[idx].verified = verified;
+      filterLaporan();
+      loadStatistik();
+    } catch(e) { alert(e.message); }
+  }
+
+  function bukaModalStatusAdmin(id) {
+    idAktifAdmin = id;
+    document.getElementById('modal-status-admin').classList.add('open');
+  }
+
+  function tutupModalStatusAdmin() {
+    document.getElementById('modal-status-admin').classList.remove('open');
+    idAktifAdmin = null;
+  }
+
+  async function simpanStatusAdmin(status) {
+    if (!idAktifAdmin) return;
+    try {
+      await apiFetch(`/admin/laporan/${idAktifAdmin}/status`, {
+        method: 'PUT',
+        body: JSON.stringify({ status })
+      });
+      const idx = allLaporan.findIndex(l => l.id === idAktifAdmin);
+      if (idx !== -1) allLaporan[idx].status = status;
+      tutupModalStatusAdmin();
+      filterLaporan();
+    } catch(e) { alert(e.message); }
+  }
+
+  // ===== USERS =====
+  async function loadUsers() {
+    try {
+      const data = await apiFetch('/admin/users');
+      const tbody = document.getElementById('tbody-users');
+      if (data.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="7" class="empty-table"><i class="ti ti-users-off"></i>Tidak ada pengguna.</td></tr>`;
+        return;
+      }
+      tbody.innerHTML = data.map((u, i) => `
+        <tr>
+          <td style="color:var(--text-muted); font-size:12px;">${i+1}</td>
+          <td style="font-weight:600;">${u.nama}</td>
+          <td style="font-size:12px;">${u.email}</td>
+          <td style="font-size:12px; color:var(--text-muted);">${u.nim || '-'}</td>
+          <td style="font-size:12px; color:var(--text-muted);">${u.no_hp || '-'}</td>
+          <td>
+            <span class="badge ${u.role === 'admin' ? 'badge-proses' : 'badge-ditemukan'}">
+              ${u.role === 'admin' ? 'Admin' : 'Mahasiswa'}
+            </span>
+          </td>
+          <td style="font-size:12px; color:var(--text-muted);">${formatTanggal(u.created_at)}</td>
+        </tr>
+      `).join('');
+    } catch(e) {
+      document.getElementById('tbody-users').innerHTML =
+        `<tr><td colspan="7" class="empty-table"><i class="ti ti-alert-circle"></i>${e.message}</td></tr>`;
+    }
+  }
+</script>
+</body>
+</html>
