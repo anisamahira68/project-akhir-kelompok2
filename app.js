@@ -2,7 +2,7 @@
 // CAMPUSFIND - Main JavaScript
 // ============================================
 
-const API_URL = 'http://localhost:5000/api';
+const API_URL = 'https://project-akhir-kelompok2-production.up.railway.app/api';
 
 // ===== TOKEN & AUTH =====
 const getToken = () => localStorage.getItem('cf_token');
