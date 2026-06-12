@@ -5,7 +5,7 @@ const fs = require('fs');
 require('dotenv').config();
 
 const app = express();
-const PORT = process.env.PORT || 5000;
+const PORT = process.env.PORT || 8080;
 
 // Buat folder uploads otomatis jika belum ada
 const uploadsDir = path.join(__dirname, 'uploads');
@@ -21,6 +21,9 @@ app.use(express.urlencoded({ extended: true }));
 
 // Folder uploads dapat diakses publik
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
+
+// Serve static files (HTML, CSS, JS)
+app.use(express.static(path.join(__dirname)));
 
 // ===== ROUTES =====
 app.use('/api/auth', require('./routes/auth'));
@@ -52,9 +55,9 @@ app.get('/api/riwayat', verifyToken, (req, res) => {
   });
 });
 
-// Health check
+// Route utama → buka login.html
 app.get('/', (req, res) => {
-  res.json({ message: 'CampusFind API berjalan dengan baik!', version: '1.0.0' });
+  res.sendFile(path.join(__dirname, 'login.html'));
 });
 
 // Error handler global
